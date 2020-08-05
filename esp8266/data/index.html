@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>ESP8266</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="style.css">
+</head>
+<body onload="start();">
+	<script src="script.js"></script>
+	<div class="header">ESP8266</div>
+	<div class="container">
+		<div class="label">Servo #1</div>
+		<input type="range" id="servo1" min="0" max="180" onchange="servo1(this.value)">
+		<div class="label">Servo #2</div>
+		<input type="range" id="servo2" min="0" max="180" onchange="servo2(this.value)">
+		<div class="label">Servo #3</div>
+		<input type="range" id="servo3" min="0" max="180" onchange="servo3(this.value)">
+	</div>
+</body>
+</html>
