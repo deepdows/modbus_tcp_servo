@@ -3,7 +3,6 @@
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <FS.h>
-#include <ESP8266WebServer.h>
 #include "Modbus.h"
 
 WiFiServer MBserver(_ModbusTCP_port);
@@ -14,20 +13,17 @@ IPAddress gateway(192, 168, 0, 1);
 IPAddress subnet(255, 255, 255, 0);
 
 extern int16_t HoldReg[];
-extern boolean flag;
+extern boolean modbusFlag;
 extern long ReqInterval_ms; 
 
 const char* ssid = "Wi-Fi";
 const char* password = "14423108";
 
-const char* ssid     = "Wi-Fi";
-const char* password = "14423108";
+const byte servoPin1 = 12; //D6
+const byte servoPin2 = 13; //D7
+const byte servoPin3 = 15; //D8
 
-const byte servoPin1 = 12; //6
-const byte servoPin2 = 13; //7
-const byte servoPin3 = 15; //8
-
-int pos[3] = 0;
+int pos[3] = {0,0,0};
 
 Servo servo1;
 Servo servo2;
@@ -51,6 +47,9 @@ void setup() {
   
   Serial.print("Connecting to ");
   Serial.println(ssid);
+  WiFi.mode(WIFI_STA);
+  WiFi.config(ip,gateway,subnet);
+  WiFi.disconnect();
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -63,9 +62,16 @@ void setup() {
   Serial.println(WiFi.localIP());
   
   localserver();
+  MBserver.begin();
 }//setup
 
 void loop(){
+  MBtransaction();
+  if(modbusFlag) {
+    for(byte i = 0; i < 3; i++){
+      pos[i] = HoldReg[i+5];
+    }
+  }
   if(millis() - time1 > 5*60*1000){
     localserver();
     time1 = millis();

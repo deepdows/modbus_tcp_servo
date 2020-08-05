@@ -6,10 +6,11 @@ int16_t  HoldReg[maxHoldReg];
 #include <ESP8266WiFi.h>
 extern WiFiServer MBserver;
 extern WiFiClient MBclient;
-boolean flag = false;
+boolean modbusFlag = false;
 
 int cCount;
 boolean debug = false;
+
 void MBserverBegin(){ //not necessary
   MBserver.begin();
   while (!MBclient){ 
@@ -27,7 +28,7 @@ boolean MBtransaction(){
   if (!MBclient.connected()){ // reconnect
     MBclient=MBserver.available();
     delay(100); 
-    flag = false;
+    modbusFlag = false;
     if(debug) Serial.print("+");
     cCount++; if (cCount>_cMax){Serial.println(); cCount=0;}
   }//if  
@@ -48,7 +49,7 @@ boolean MBtransaction(){
    if (byteFN==MB_FC_WRITE_REGISTER) WordDataLength=1;
    
 #ifdef MBdebug  
-flag = true;
+modbusFlag = true;
 if(debug){ 
    Serial.print("F="); Serial.print(byteFN,DEC); Serial.print(":");
    Serial.print("S="); Serial.print(Start,DEC); Serial.print(";");
