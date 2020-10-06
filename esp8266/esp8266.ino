@@ -14,10 +14,12 @@ IPAddress subnet(255, 255, 255, 0);
 
 extern int16_t HoldReg[];
 extern boolean modbusFlag;
-extern long ReqInterval_ms; 
+extern long ReqInterval_ms;
 
 const char* ssid = "Wi-Fi";
 const char* password = "14423108";
+
+/* Servo control start */
 
 const byte servoPin1 = 12; //D6
 const byte servoPin2 = 13; //D7
@@ -29,22 +31,35 @@ Servo servo1;
 Servo servo2;
 Servo servo3;
 
+enum Servos
+{
+    SERVO0 = 0,
+    SERVO1,
+    SERVO2,
+    SERVO3,
+    SERVO4,
+    SERVO5,
+    SERVO_COUNTER // should be after SERVO defines
+};
+
+/* Servo control end */
+
 unsigned long time1 = 0;
 
 AsyncWebServer server(80);
 
 void setup() {
   Serial.begin(9600);
-  
+
   servo1.attach(servoPin1);
   servo2.attach(servoPin2);
   servo3.attach(servoPin3);
-  
+
   if(!SPIFFS.begin()){
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
   }
-  
+
   Serial.print("Connecting to ");
   Serial.println(ssid);
   WiFi.mode(WIFI_STA);
@@ -56,11 +71,11 @@ void setup() {
     Serial.print(".");
   }
   Serial.println("");
-  
+
   Serial.println("WiFi connected.");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
-  
+
   localserver();
   MBserver.begin();
 }//setup
@@ -68,7 +83,7 @@ void setup() {
 void loop(){
   MBtransaction();
   if(modbusFlag) {
-    for(byte i = 0; i < 3; i++){
+    for(byte i = 0; i < SERVO_COUNTER; i++){
       pos[i] = HoldReg[i+5];
     }
   }
@@ -76,10 +91,10 @@ void loop(){
     localserver();
     time1 = millis();
   }
-  servo1.write(pos[0]);
-  servo2.write(pos[1]);
-  servo3.write(pos[2]);
-    
+  servo1.write(pos[SERVO0]);
+  servo2.write(pos[SERVO1]);
+  servo3.write(pos[SERVO2]);
+
 } //loop
 void localserver(){
   server.on("/states", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -89,12 +104,12 @@ void localserver(){
         AsyncWebParameter* p = request->getParam(i);
         String nam = p->name();
         String value = p->value();
-        if(nam == "servo1") pos[0] = value.toInt();
-        if(nam == "servo2") pos[1] = value.toInt();
-        if(nam == "servo3") pos[2] = value.toInt();
+        if(nam == "servo1") pos[SERVO0] = value.toInt();
+        if(nam == "servo2") pos[SERVO1] = value.toInt();
+        if(nam == "servo3") pos[SERVO2] = value.toInt();
     }
   });
-  
+
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(SPIFFS, "/index.html", "text/html");
   });
@@ -114,6 +129,6 @@ void localserver(){
   server.on("/servo3", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain", String(pos[2]).c_str());
   });
-  
+
   server.begin();
   }//localserver
