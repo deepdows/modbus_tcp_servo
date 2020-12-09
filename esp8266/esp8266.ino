@@ -86,6 +86,7 @@ void setup() {
 
 void loop(){
   MBtransaction();
+  server.handleClient();
   if(modbusFlag) {
     for(byte i = 0; i < SERVO_COUNTER; i++){
       servo_angle[i] = HoldReg[i+5];
