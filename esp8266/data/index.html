@@ -11,11 +11,17 @@
 	<div class="header">ESP8266</div>
 	<div class="container">
 		<div class="label">Servo #1</div>
-		<input type="range" id="servo1" min="0" max="180" onchange="servo1(this.value)">
+		<input type="range" id="servo1" min="0" max="180" onchange="servo(1,this.value)">
 		<div class="label">Servo #2</div>
-		<input type="range" id="servo2" min="0" max="180" onchange="servo2(this.value)">
+		<input type="range" id="servo2" min="0" max="180" onchange="servo(2,this.value)">
 		<div class="label">Servo #3</div>
-		<input type="range" id="servo3" min="0" max="180" onchange="servo3(this.value)">
+		<input type="range" id="servo3" min="0" max="180" onchange="servo(3, this.value)">
+		<div class="label">Servo #4</div>
+		<input type="range" id="servo4" min="0" max="180" onchange="servo(4, this.value)">
+		<div class="label">Servo #5</div>
+		<input type="range" id="servo5" min="0" max="180" onchange="servo(5, this.value)">
+		<div class="label">Servo #6</div>
+		<input type="range" id="servo6" min="0" max="180" onchange="servo(6, this.value)">
 	</div>
 </body>
 </html>

@@ -1,9 +1,11 @@
 #include <ESP8266WiFi.h>
 #include <Servo.h>
-#include <ESPAsyncTCP.h>
-#include <ESPAsyncWebServer.h>
+#include <ESP8266WebServer.h>
 #include <FS.h>
 #include "Modbus.h"
+/* Servo includes */
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
 
 WiFiServer MBserver(_ModbusTCP_port);
 WiFiClient MBclient = MBserver.available();
@@ -14,37 +16,43 @@ IPAddress subnet(255, 255, 255, 0);
 
 extern int16_t HoldReg[];
 extern boolean modbusFlag;
-extern long ReqInterval_ms; 
+extern long ReqInterval_ms;
 
-const char* ssid = "Wi-Fi";
-const char* password = "14423108";
+const char* ssid = "**";
+const char* password = "***";
 
-const byte servoPin1 = 12; //D6
-const byte servoPin2 = 13; //D7
-const byte servoPin3 = 15; //D8
+/* Servo control start */
 
-int pos[3] = {0,0,0};
+enum Servos
+{
+    SERVO0 = 0,
+    SERVO1,
+    SERVO2,
+    SERVO3,
+    SERVO4,
+    SERVO5,
+    SERVO_COUNTER // should be after SERVO defines
+};
 
-Servo servo1;
-Servo servo2;
-Servo servo3;
+int servo_angle[SERVO_COUNTER] = {0,0,0,0,0,0};
 
-unsigned long time1 = 0;
+#define SERVOMIN  150 // This is the 'minimum' pulse length count (out of 4096)
+#define SERVOMAX  600 // This is the 'maximum' pulse length count (out of 4096)
 
-AsyncWebServer server(80);
+Adafruit_PWMServoDriver servo_pwm = Adafruit_PWMServoDriver();
+
+/* Servo control end */
+
+ESP8266WebServer server(80);
 
 void setup() {
   Serial.begin(9600);
-  
-  servo1.attach(servoPin1);
-  servo2.attach(servoPin2);
-  servo3.attach(servoPin3);
-  
+
   if(!SPIFFS.begin()){
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
   }
-  
+
   Serial.print("Connecting to ");
   Serial.println(ssid);
   WiFi.mode(WIFI_STA);
@@ -56,64 +64,52 @@ void setup() {
     Serial.print(".");
   }
   Serial.println("");
-  
+
   Serial.println("WiFi connected.");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+
+  server.serveStatic("/", SPIFFS, "/index.html");
+  server.serveStatic("/script.js", SPIFFS, "/script.js");
+  server.serveStatic("/style.css", SPIFFS, "/style.css");
+  for(int i = 0; i < 6; i++){
+    server.on("/servo"+String(i), server.send(200, "text/plain", String(servo_angle[i])));
+  }
+  server.begin();
   
-  localserver();
   MBserver.begin();
+
+  servo_pwm.begin();
+  servo_pwm.setOscillatorFrequency(27000000);
+  servo_pwm.setPWMFreq(50);  // Analog servos run at ~50 Hz updates
 }//setup
 
 void loop(){
   MBtransaction();
   if(modbusFlag) {
-    for(byte i = 0; i < 3; i++){
-      pos[i] = HoldReg[i+5];
+    for(byte i = 0; i < SERVO_COUNTER; i++){
+      servo_angle[i] = HoldReg[i+5];
     }
   }
-  if(millis() - time1 > 5*60*1000){
-    localserver();
-    time1 = millis();
-  }
-  servo1.write(pos[0]);
-  servo2.write(pos[1]);
-  servo3.write(pos[2]);
-    
-} //loop
-void localserver(){
-  server.on("/states", HTTP_GET, [](AsyncWebServerRequest *request){
-    int paramsNr = request->params();
-    Serial.println(paramsNr);
-    for(int i=0;i<paramsNr;i++){
-        AsyncWebParameter* p = request->getParam(i);
-        String nam = p->name();
-        String value = p->value();
-        if(nam == "servo1") pos[0] = value.toInt();
-        if(nam == "servo2") pos[1] = value.toInt();
-        if(nam == "servo3") pos[2] = value.toInt();
-    }
-  });
-  
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/index.html", "text/html");
-  });
-  server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/style.css", "text/css");
-  });
-  server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/script.js", "application/javascript");
-  });
 
-  server.on("/servo1", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", String(pos[0]).c_str());
-  });
-  server.on("/servo2", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", String(pos[1]).c_str());
-  });
-  server.on("/servo3", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", String(pos[2]).c_str());
-  });
-  
-  server.begin();
-  }//localserver
+  servo_pwm.setPWM(SERVO0, 0, getPulseLength(servo_angle[SERVO0], false) );
+  servo_pwm.setPWM(SERVO1, 0, getPulseLength(servo_angle[SERVO1], false) );
+} //loop
+
+int getPulseLength(int value, boolean inverted){
+
+  if( inverted != true){
+    return map(value, 0, 180, SERVOMIN, SERVOMAX);
+  } else {
+    return map(value, 180, 0, SERVOMIN, SERVOMAX);
+  }
+
+}//getPulseLength
+
+void argReceive(){
+  String n = server.argName(0);
+  for(int i = 0; i < 6; i++){
+    if(n == ("servo"+String(i)) && (servo_angle[i] != server.arg("servo"+String(i)).toInt()))
+      servo_angle = server.arg("servo"+String(i)).toInt();
+  }
+}//argReceive

@@ -1,32 +1,21 @@
-function servo1(val){
+function servo(num, val){
 	var xhttp = new XMLHttpRequest();
-	xhttp.open("GET", "states?servo1="+val, true);
+	xhttp.open("GET", "?servo"+num+"="+val, true);
 	xhttp.send();
 }
-function servo2(val){
-	var xhttp = new XMLHttpRequest();
-	xhttp.open("GET", "states?servo2="+val, true);
-	xhttp.send();
-}
-function servo3(val){
-	var xhttp = new XMLHttpRequest();
-	xhttp.open("GET", "states?servo3="+val, true);
-	xhttp.send();
-}
+
 function start(){
-	update("servo1");
-	update("servo2");
-	update("servo3");
+	var servos = 6;
+	for(i=1;i<=servos; i++) update("servo"+i);
 }
 
 function update(name){
 	var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
+	xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      document.getElementById(name).value = this.responseText;
-    }
-  };
-  console.log("/"+name);
-  xhttp.open("GET", "/"+name, true);
-  xhttp.send();
+    	document.getElementById(name).value = this.responseText;
+		}
+	};
+	xhttp.open("GET", "/"+name, true);
+	xhttp.send();
 }
