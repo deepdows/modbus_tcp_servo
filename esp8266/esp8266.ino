@@ -95,7 +95,6 @@ void loop(){
       servo_angle[i] = HoldReg[i+5];
     }
   }
-
   servo_pwm.setPWM(SERVO0, 0, getPulseLength(servo_angle[SERVO0], false) );
   servo_pwm.setPWM(SERVO1, 0, getPulseLength(servo_angle[SERVO1], false) );
 } //loop

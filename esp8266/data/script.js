@@ -3,12 +3,10 @@ function servo(num, val){
 	xhttp.open("GET", "?servo"+num+"="+val, true);
 	xhttp.send();
 }
-
 function start(){
 	var servos = 6;
 	for(i=0;i<servos; i++) update("servo"+i);
 }
-
 function update(name){
 	var xhttp = new XMLHttpRequest();
 	xhttp.onreadystatechange = function() {
