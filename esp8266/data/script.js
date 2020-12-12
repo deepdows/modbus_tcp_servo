@@ -6,7 +6,7 @@ function servo(num, val){
 
 function start(){
 	var servos = 6;
-	for(i=1;i<=servos; i++) update("servo"+i);
+	for(i=0;i<servos; i++) update("servo"+i);
 }
 
 function update(name){
