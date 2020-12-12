@@ -72,9 +72,12 @@ void setup() {
   server.serveStatic("/", SPIFFS, "/index.html");
   server.serveStatic("/script.js", SPIFFS, "/script.js");
   server.serveStatic("/style.css", SPIFFS, "/style.css");
-  for(int i = 0; i < 6; i++){
-    server.on("/servo"+String(i), server.send(200, "text/plain", String(servo_angle[i])));
-  }
+  server.on("/servo0", [](){ server.send(200, "text/html", String(servo_angle[0])); });
+  server.on("/servo1", [](){ server.send(200, "text/html", String(servo_angle[1])); });
+  server.on("/servo2", [](){ server.send(200, "text/html", String(servo_angle[2])); });
+  server.on("/servo3", [](){ server.send(200, "text/html", String(servo_angle[3])); });
+  server.on("/servo4", [](){ server.send(200, "text/html", String(servo_angle[4])); });
+  server.on("/servo5", [](){ server.send(200, "text/html", String(servo_angle[5])); });
   server.begin();
   
   MBserver.begin();
@@ -111,6 +114,6 @@ void argReceive(){
   String n = server.argName(0);
   for(int i = 0; i < 6; i++){
     if(n == ("servo"+String(i)) && (servo_angle[i] != server.arg("servo"+String(i)).toInt()))
-      servo_angle = server.arg("servo"+String(i)).toInt();
+      servo_angle[i] = server.arg("servo"+String(i)).toInt();
   }
 }//argReceive
